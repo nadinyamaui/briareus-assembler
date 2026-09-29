@@ -573,9 +573,29 @@ proc filter_rows uses rbx rsi rdi
     inc ebx
     jmp .loop
 .done:
-    cmp [rowCount],0
-    jne .return
+    ; Count visible matches, not the unfiltered server response.
+    invoke SendMessageW,[h_rows],LB_GETCOUNT,0,0
+    test eax,eax
+    jnz .matches
+    mov word [sessionText],0
+    mov word [numberText],0
+    invoke SetWindowTextW,[h_detailTitle],clearTitle
     invoke SetWindowTextW,[h_detail],noRowsText
+    fastcall update_enabled
+    fastcall status,noRowsText
+    ret
+.matches:
+    cmp [selectedRow],-1
+    jne .status
+    mov word [sessionText],0
+    mov word [numberText],0
+    invoke SetWindowTextW,[h_detailTitle],clearTitle
+    invoke SetWindowTextW,[h_detail],emptyText
+    fastcall update_enabled
+.status:
+    cmp [busy],0
+    jne .return
+    fastcall status,loadedText
 .return:
     ret
 endp
@@ -1091,6 +1111,10 @@ proc window_proc uses rbx rsi rdi, hwnd,message,wparam,lparam
     jne .zero
     cmp [viewMode],0
     jne .zero
+    ; Refresh disables the view selector, which closes an open dropdown.
+    invoke SendMessageW,[h_view],CB_GETDROPPEDSTATE,0,0
+    test eax,eax
+    jnz .zero
     fastcall load_session
     jmp .zero
 .command:
@@ -1174,6 +1198,11 @@ proc window_proc uses rbx rsi rdi, hwnd,message,wparam,lparam
 .view:
     cmp ebx,CBN_SELCHANGE
     jne .zero
+    cmp [advancedMode],0
+    je .viewSelection
+    ; Switching views must leave the API editor just like Back to message.
+    invoke SetWindowTextW,[h_compose],draftText
+.viewSelection:
     invoke SendMessageW,[h_view],CB_GETCURSEL,0,0
     mov [viewMode],eax
     invoke InvalidateRect,[h_view],0,TRUE
@@ -1184,6 +1213,7 @@ proc window_proc uses rbx rsi rdi, hwnd,message,wparam,lparam
     mov [rowCount],0
     invoke SendMessageW,[h_rows],LB_RESETCONTENT,0,0
     invoke SetWindowTextW,[h_detailTitle],clearTitle
+    invoke SetWindowTextW,[h_detail],emptyText
     fastcall show_state
     fastcall load_list
     jmp .zero

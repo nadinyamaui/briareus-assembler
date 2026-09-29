@@ -53,7 +53,11 @@ include 'net.inc'
 include 'ui.inc'
 
 section '.data' data readable writeable
+if defined TEST_MODE
+className du 'BriareusAssemblerTestWindow',0
+else
 className du 'BriareusAssemblerWindow',0
+end if
 windowTitle du 'Briareus',0
 wc WNDCLASSEX sizeof.WNDCLASSEX,CS_HREDRAW+CS_VREDRAW,window_proc,0,0,0,0,0,0,0,className,0
 msg MSG
@@ -251,5 +255,4 @@ file 'app.manifest'
 endres
 
 section '.reloc' fixups data readable discardable
-
 

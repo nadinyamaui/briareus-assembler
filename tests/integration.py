@@ -7,8 +7,8 @@ u.PostMessageW.argtypes=[w.HWND,w.UINT,w.WPARAM,w.LPARAM]
 
 def launch():
     p=subprocess.Popen([str(Path('build/Briareus-test.exe').resolve())])
-    wait_for(lambda: u.FindWindowW('BriareusAssemblerWindow',None))
-    h=u.FindWindowW('BriareusAssemblerWindow',None)
+    wait_for(lambda: u.FindWindowW('BriareusAssemblerTestWindow',None))
+    h=u.FindWindowW('BriareusAssemblerTestWindow',None)
     wait_for(lambda: control(h,102))
     return p,h
 
@@ -36,6 +36,28 @@ try:
     assert 'MUST NOT RENDER' not in text(control(h,206))
     assert 'España — 日本語 🚀' in text(control(h,206))
     screenshot(h,'build/conversation.png')
+    # A background refresh must not dismiss an open view selector.
+    u.SendMessageW(h,0x6,1,0)  # WM_ACTIVATE, WA_ACTIVE
+    u.SendMessageW(control(h,203),0x14f,1,0)  # CB_SHOWDROPDOWN
+    assert u.SendMessageW(control(h,203),0x157,0,0)
+    u.SendMessageW(h,0x113,1,0)  # WM_TIMER
+    time.sleep(.15)
+    assert u.SendMessageW(control(h,203),0x157,0,0), 'Polling closed the view selector'
+    assert u.IsWindowEnabled(control(h,203))
+    u.SendMessageW(control(h,203),0x14f,0,0)
+    u.SendMessageW(h,0x6,0,0)
+    # Empty search results cannot retain a sendable hidden conversation.
+    set_text(h,204,'no-match-regression')
+    assert u.SendMessageW(control(h,205),0x18b,0,0)==0
+    assert 'No matching items' in text(control(h,206))
+    assert 'No matching items' in text(control(h,23))
+    assert not u.IsWindowEnabled(control(h,208))
+    set_text(h,204,'')
+    assert text(control(h,206))==''
+    assert 'No matching items' not in text(control(h,23))
+    select(h,205,0)
+    wait_for(lambda:'stable session ID' in text(control(h,206)))
+    wait_for(lambda:u.IsWindowEnabled(control(h,208)))
     message='Quote "hello" \\ path\nEspaña 日本語 🚀'
     set_text(h,207,message)
     click(h,208)
@@ -69,6 +91,8 @@ try:
     click(h,212)
     assert 'valid JSON object' in text(control(h,23))
     select(h,203,2,True)
+    assert text(control(h,207))=='Unsent draft', 'API JSON leaked into message draft'
+    assert text(control(h,206))=='', 'Previous PR diff survived the view change'
     wait_for(lambda:u.SendMessageW(control(h,205),0x18b,0,0)==1)
     select(h,205,0)
     assert 'Refresh should preserve focus.' in text(control(h,206))

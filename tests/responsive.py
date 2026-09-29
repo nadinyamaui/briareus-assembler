@@ -33,8 +33,8 @@ def resize(h,width,height):
     check(h)
 
 p=subprocess.Popen([str(Path('build/Briareus-test.exe').resolve())])
-wait_for(lambda:u.FindWindowW('BriareusAssemblerWindow',None))
-h=u.FindWindowW('BriareusAssemblerWindow',None)
+wait_for(lambda:u.FindWindowW('BriareusAssemblerTestWindow',None))
+h=u.FindWindowW('BriareusAssemblerTestWindow',None)
 try:
     wait_for(lambda:control(h,102))
     for width,height in [(480,680),(820,700),(1200,820),(1600,1000)]:
