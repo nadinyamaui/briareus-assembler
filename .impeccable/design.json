@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-29T09:51:40.248121+00:00",
+  "title": "Design System: Briareus for Windows",
+  "extensions": {},
+  "components": [],
+  "narrative": {
+    "overview": "Mode: Operate. Preserve the original iOS application's warm neutral and clay identity, adapted to native Windows desktop controls. The FASM and Win32 implementation combines a quiet canvas, a serif brand title and practical lists and text panes.",
+    "keyCharacteristics": [
+      "Warm neutral canvas with a clay wordmark.",
+      "Standard native controls and a persistent status line.",
+      "Three responsive size classes: three panes, navigation plus detail, or compact single-pane navigation.",
+      "Plain Unicode text, monospaced details and editable JSON for advanced operations."
+    ],
+    "rules": [
+      {
+        "section": "colors",
+        "body": "Combo boxes and read-only edits paint opaque backgrounds so refreshed text does not retain stale glyphs.",
+        "name": "The Opaque Surface Rule"
+      }
+    ]
+  }
+}
